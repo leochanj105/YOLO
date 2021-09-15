@@ -1,17 +1,19 @@
-GPU=0
+GPU=1
 CUDNN=0
 OPENCV=0
 OPENMP=0
 DEBUG=0
 
-ARCH= -gencode arch=compute_20,code=[sm_20,sm_21] \
+#ARCH= -gencode arch=compute_20,code=[sm_20,sm_21] \
       -gencode arch=compute_30,code=sm_30 \
       -gencode arch=compute_35,code=sm_35 \
       -gencode arch=compute_50,code=[sm_50,compute_50] \
       -gencode arch=compute_52,code=[sm_52,compute_52]
 
 # This is what I use, uncomment if you know your arch and want to specify
-# ARCH= -gencode arch=compute_52,code=compute_52
+ARCH= -gencode arch=compute_53,code=[sm_53,compute_53] \
+      -gencode arch=compute_60,code=[sm_60,compute_60] \
+      -gencode arch=compute_62,code=[sm_62,compute_62]
 
 VPATH=./src/:./examples
 SLIB=libdarknet.so
@@ -46,7 +48,7 @@ COMMON+= `pkg-config --cflags opencv`
 endif
 
 ifeq ($(GPU), 1) 
-COMMON+= -DGPU -I/usr/local/cuda/include/
+COMMON+= -DGPU -I/usr/local/cuda-11.1/include/
 CFLAGS+= -DGPU
 LDFLAGS+= -L/usr/local/cuda/lib64 -lcuda -lcudart -lcublas -lcurand
 endif

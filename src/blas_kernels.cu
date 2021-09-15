@@ -29,7 +29,7 @@ void scale_bias_gpu(float *output, float *biases, int batch, int n, int size)
 
 __global__ void backward_scale_kernel(float *x_norm, float *delta, int batch, int n, int size, float *scale_updates)
 {
-    __shared__ float part[BLOCK];
+     float part[BLOCK];
     int i,b;
     int filter = blockIdx.x;
     int p = threadIdx.x;
@@ -89,7 +89,7 @@ __global__ void backward_bias_conn_kernel(float *bias_updates, float *delta, int
 
 __global__ void backward_bias_kernel(float *bias_updates, float *delta, int batch, int n, int size)
 {
-    __shared__ float part[BLOCK];
+     float part[BLOCK];
     int i,b;
     int filter = blockIdx.x;
     int p = threadIdx.x;
@@ -242,7 +242,7 @@ __global__ void accumulate_kernel(float *x, int n, int groups, float *sum)
 __global__ void fast_mean_delta_kernel(float *delta, float *variance, int batch, int filters, int spatial, float *mean_delta)
 {
     const int threads = BLOCK;
-    __shared__ float local[threads];
+     float local[threads];
 
     int id = threadIdx.x;
     local[id] = 0;
@@ -271,7 +271,7 @@ __global__ void fast_mean_delta_kernel(float *delta, float *variance, int batch,
 __global__ void  fast_variance_delta_kernel(float *x, float *delta, float *mean, float *variance, int batch, int filters, int spatial, float *variance_delta)
 {
     const int threads = BLOCK;
-    __shared__ float local[threads];
+     float local[threads];
 
     int id = threadIdx.x;
     local[id] = 0;
@@ -475,7 +475,7 @@ extern "C" void normalize_gpu(float *x, float *mean, float *variance, int batch,
 __global__ void  fast_mean_kernel(float *x, int batch, int filters, int spatial, float *mean)
 {
     const int threads = BLOCK;
-    __shared__ float local[threads];
+     float local[threads];
 
     int id = threadIdx.x;
     local[id] = 0;
@@ -504,7 +504,7 @@ __global__ void  fast_mean_kernel(float *x, int batch, int filters, int spatial,
 __global__ void  fast_variance_kernel(float *x, float *mean, int batch, int filters, int spatial, float *variance)
 {
     const int threads = BLOCK;
-    __shared__ float local[threads];
+     float local[threads];
 
     int id = threadIdx.x;
     local[id] = 0;

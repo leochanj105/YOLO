@@ -1,0 +1,1 @@
+./darknet detector valid cfg/voc.data cfg/yolo-voc.cfg yolo-voc.weights

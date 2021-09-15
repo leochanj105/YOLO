@@ -1,4 +1,5 @@
 #include "darknet.h"
+#include "sys/types.h"
 
 static int coco_ids[] = {1,2,3,4,5,6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,27,28,31,32,33,34,35,36,37,38,39,40,41,42,43,44,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,67,70,72,73,74,75,76,77,78,79,80,81,82,84,85,86,87,88,89,90};
 
@@ -365,6 +366,7 @@ void validate_detector_flip(char *datacfg, char *cfgfile, char *weightfile, char
 
 void validate_detector(char *datacfg, char *cfgfile, char *weightfile, char *outfile)
 {
+    // printf("--in validate detector\n");
     int j;
     list *options = read_data_cfg(datacfg);
     char *valid_images = option_find_str(options, "valid", "data/train.list");
@@ -373,12 +375,14 @@ void validate_detector(char *datacfg, char *cfgfile, char *weightfile, char *out
     char **names = get_labels(name_list);
     char *mapf = option_find_str(options, "map", 0);
     int *map = 0;
-    if (mapf) map = read_map(mapf);
-
+    if (mapf) map = read_map(mapf); 
+    // printf("%d\n", mapf);
+    // return;
     network net = parse_network_cfg(cfgfile);
     if(weightfile){
         load_weights(&net, weightfile);
     }
+    
     set_batch_network(&net, 1);
     fprintf(stderr, "Learning Rate: %g, Momentum: %g, Decay: %g\n", net.learning_rate, net.momentum, net.decay);
     srand(time(0));
@@ -421,13 +425,15 @@ void validate_detector(char *datacfg, char *cfgfile, char *weightfile, char *out
     float **probs = calloc(l.w*l.h*l.n, sizeof(float *));
     for(j = 0; j < l.w*l.h*l.n; ++j) probs[j] = calloc(classes+1, sizeof(float *));
 
-    int m = plist->size;
+    // int m = plist->size;
+    int m = 200;              // Amount of images
     int i=0;
     int t;
 
     float thresh = .005;
     float nms = .45;
 
+    // int nthreads = 4;
     int nthreads = 4;
     image *val = calloc(nthreads, sizeof(image));
     image *val_resized = calloc(nthreads, sizeof(image));
@@ -449,7 +455,6 @@ void validate_detector(char *datacfg, char *cfgfile, char *weightfile, char *out
     }
     time_t start = time(0);
     for(i = nthreads; i < m+nthreads; i += nthreads){
-        fprintf(stderr, "%d\n", i);
         for(t = 0; t < nthreads && i+t-nthreads < m; ++t){
             pthread_join(thr[t], 0);
             val[t] = buf[t];
@@ -462,21 +467,24 @@ void validate_detector(char *datacfg, char *cfgfile, char *weightfile, char *out
             thr[t] = load_data_in_thread(args);
         }
         for(t = 0; t < nthreads && i+t-nthreads < m; ++t){
+            // pid_t tid = gettid();
+            // printf("%d %d %d\n",i,t, tid);
             char *path = paths[i+t-nthreads];
+            // printf("%s\n", path);   
             char *id = basecfg(path);
             float *X = val_resized[t].data;
             network_predict(net, X);
             int w = val[t].w;
             int h = val[t].h;
-            get_region_boxes(l, w, h, net.w, net.h, thresh, probs, boxes, 0, 0, map, .5, 0);
-            if (nms) do_nms_sort(boxes, probs, l.w*l.h*l.n, classes, nms);
-            if (coco){
-                print_cocos(fp, path, boxes, probs, l.w*l.h*l.n, classes, w, h);
-            } else if (imagenet){
-                print_imagenet_detections(fp, i+t-nthreads+1, boxes, probs, l.w*l.h*l.n, classes, w, h);
-            } else {
-                print_detector_detections(fps, id, boxes, probs, l.w*l.h*l.n, classes, w, h);
-            }
+            // get_region_boxes(l, w, h, net.w, net.h, thresh, probs, boxes, 0, 0, map, .5, 0);
+            // if (nms) do_nms_sort(boxes, probs, l.w*l.h*l.n, classes, nms);
+            // if (coco){
+            //     print_cocos(fp, path, boxes, probs, l.w*l.h*l.n, classes, w, h);
+            // } else if (imagenet){
+            //     print_imagenet_detections(fp, i+t-nthreads+1, boxes, probs, l.w*l.h*l.n, classes, w, h);
+            // } else {
+            //     print_detector_detections(fps, id, boxes, probs, l.w*l.h*l.n, classes, w, h);
+            // }
             free(id);
             free_image(val[t]);
             free_image(val_resized[t]);
